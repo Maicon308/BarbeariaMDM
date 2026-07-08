@@ -78,9 +78,6 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
         setClientesTotal(clientesResponse.data.length);
         setServicosTotal(servicosResponse.data.length);
         setReservasTotal(reservasResponse.data.length);
-        if (!selectedBarbeariaId && barbeariasResponse.data[0]) {
-          setSelectedBarbeariaId(barbeariasResponse.data[0].id);
-        }
       },
     );
   }, []);
@@ -88,7 +85,7 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
   const bloqueadas = barbearias.filter((barbearia) => !barbearia.ativa);
   const matrizes = barbearias.filter((barbearia) => !barbearia.matriz);
   const filiais = barbearias.filter((barbearia) => barbearia.matriz);
-  const selectedBarbearia = barbearias.find((barbearia) => barbearia.id === selectedBarbeariaId) ?? barbearias[0] ?? null;
+  const selectedBarbearia = selectedBarbeariaId ? barbearias.find((barbearia) => barbearia.id === selectedBarbeariaId) ?? null : null;
   const receitaPrevista = useMemo(
     () =>
       barbearias
@@ -215,13 +212,15 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
         </aside>
       </section>
 
-      <BarbeariaReport
-        barbearia={selectedBarbearia}
-        clientes={clientes}
-        pagamentos={pagamentos}
-        reservas={reservas}
-        servicos={servicos}
-      />
+      {selectedBarbearia && (
+        <BarbeariaReport
+          barbearia={selectedBarbearia}
+          clientes={clientes}
+          pagamentos={pagamentos}
+          reservas={reservas}
+          servicos={servicos}
+        />
+      )}
     </main>
   );
 }

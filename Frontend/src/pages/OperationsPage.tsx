@@ -51,6 +51,7 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
   const [servicos, setServicos] = useState<ServicoData[]>([]);
   const [cadeiras, setCadeiras] = useState<CadeiraData[]>([]);
   const [rows, setRows] = useState<any[]>([]);
+  const [filialTarget, setFilialTarget] = useState<BarbeariaData | null>(null);
 
   async function loadBase() {
     const [meRes, barbeariasRes, planosRes, clientesRes, usuariosRes, servicosRes, cadeirasRes, rowsRes] = await Promise.all([
@@ -119,6 +120,9 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
     try {
       await api.post(endpoints[moduleKey], payload);
       formEl.reset();
+      if (moduleKey === "barbearias") {
+        setFilialTarget(null);
+      }
       setMessageTone("ok");
       setMessage(moduleKey === "barbearias" ? "Barbearia criada. Entregue o usuario e senha ao dono." : "Cadastro salvo.");
       await loadBase();
@@ -150,6 +154,19 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
     }, 250);
   }
 
+  function startFilial(barbearia: BarbeariaData) {
+    setFilialTarget(barbearia);
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      const form = formRef.current;
+      form?.reset();
+      const matriz = form?.elements.namedItem("matriz") as HTMLSelectElement | null;
+      const nome = form?.elements.namedItem("nome") as HTMLInputElement | null;
+      if (matriz) matriz.value = String(barbearia.id);
+      nome?.focus();
+    }, 250);
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -167,10 +184,12 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
         <BarbeariasCadastro
           barbearias={barbearias}
           fields={fields}
+          filialTarget={filialTarget}
           formRef={formRef}
           isSuperAdmin={isSuperAdmin}
           message={message}
           messageTone={messageTone}
+          onCreateFilial={startFilial}
           onToggle={toggleBarbearia}
           submit={submit}
         />
@@ -220,19 +239,23 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
 function BarbeariasCadastro({
   barbearias,
   fields,
+  filialTarget,
   formRef,
   isSuperAdmin,
   message,
   messageTone,
+  onCreateFilial,
   onToggle,
   submit,
 }: {
   barbearias: BarbeariaData[];
   fields: Field[];
+  filialTarget: BarbeariaData | null;
   formRef: { current: HTMLFormElement | null };
   isSuperAdmin: boolean;
   message: string;
   messageTone: "ok" | "error";
+  onCreateFilial: (barbearia: BarbeariaData) => void;
   onToggle: (barbearia: BarbeariaData) => void;
   submit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
@@ -247,10 +270,16 @@ function BarbeariasCadastro({
       <form className="rounded-lg border border-zinc-200 bg-white shadow-sm" onSubmit={submit} ref={formRef}>
         <div className="border-b border-zinc-200 px-5 py-4">
           <h2 className="text-lg font-black text-[#191512]">Ficha da empresa</h2>
-          <p className="mt-1 text-sm text-zinc-500">Cadastre a unidade, plano, dados comerciais e acesso inicial do responsavel.</p>
+          <p className="mt-1 text-sm text-zinc-500">Cadastre a matriz. Depois, use Criar filial na lista para vincular uma nova unidade.</p>
         </div>
 
         <div className="grid gap-6 p-5">
+          {filialTarget && (
+            <div className="rounded-md border border-[#d7b56d] bg-[#fff7e6] px-4 py-3 text-sm font-semibold text-[#5a3e18]">
+              Nova filial vinculada a {filialTarget.nome}. Preencha os dados da unidade e salve.
+            </div>
+          )}
+
           <section>
             <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-[#8b1e24]">Dados da unidade</h3>
             <div className="grid gap-4 md:grid-cols-2">
@@ -322,7 +351,7 @@ function BarbeariasCadastro({
                 <th className="px-4 py-3 font-semibold">Tipo</th>
                 <th className="px-4 py-3 font-semibold">WhatsApp</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
-                {isSuperAdmin && <th className="px-4 py-3 font-semibold">Acao</th>}
+                <th className="px-4 py-3 font-semibold">Acao</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -342,24 +371,35 @@ function BarbeariasCadastro({
                         {barbearia.ativa ? "Liberada" : "Bloqueada"}
                       </span>
                     </td>
-                    {isSuperAdmin && (
-                      <td className="px-4 py-3">
-                        <button
-                          className={`rounded-md px-3 py-2 text-xs font-bold ${
-                            barbearia.ativa ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
-                          }`}
-                          onClick={() => onToggle(barbearia)}
-                          type="button"
-                        >
-                          {barbearia.ativa ? "Bloquear" : "Liberar"}
-                        </button>
-                      </td>
-                    )}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        {!barbearia.matriz && (
+                          <button
+                            className="rounded-md border border-zinc-300 px-3 py-2 text-xs font-bold text-zinc-700 hover:border-[#8b1e24] hover:text-[#8b1e24]"
+                            onClick={() => onCreateFilial(barbearia)}
+                            type="button"
+                          >
+                            Criar filial
+                          </button>
+                        )}
+                        {isSuperAdmin && (
+                          <button
+                            className={`rounded-md px-3 py-2 text-xs font-bold ${
+                              barbearia.ativa ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
+                            }`}
+                            onClick={() => onToggle(barbearia)}
+                            type="button"
+                          >
+                            {barbearia.ativa ? "Bloquear" : "Liberar"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td className="px-4 py-6 text-center text-zinc-500" colSpan={isSuperAdmin ? 6 : 5}>
+                  <td className="px-4 py-6 text-center text-zinc-500" colSpan={6}>
                     Nenhuma barbearia cadastrada ainda.
                   </td>
                 </tr>
@@ -505,7 +545,10 @@ function buildFields(
   isSuperAdmin: boolean,
 ): Field[] {
   const barbeariaOptions = data.barbearias.map((item) => ({ value: String(item.id), label: `${item.nome} - ${item.plano_nome}` }));
-  const matrizOptions = [{ value: "", label: "Sem matriz" }, ...data.barbearias.map((item) => ({ value: String(item.id), label: item.nome }))];
+  const matrizOptions = [
+    { value: "", label: "Matriz principal" },
+    ...data.barbearias.filter((item) => !item.matriz).map((item) => ({ value: String(item.id), label: `Filial de ${item.nome}` })),
+  ];
   const planoOptions = data.planos.map((item) => ({ value: String(item.id), label: `${item.nome} - ${currency.format(Number(item.preco_mensal))}` }));
   const clienteOptions = data.clientes.map((item) => ({ value: String(item.id), label: item.nome }));
   const barbeiroOptions = data.usuarios
@@ -517,10 +560,10 @@ function buildFields(
   if (moduleKey === "barbearias") {
     const baseFields: Field[] = [
       { name: "nome", label: "Nome da barbearia", type: "text", required: true },
-      { name: "documento", label: "Documento", type: "text" },
-      { name: "whatsapp", label: "WhatsApp", type: "text" },
+      { name: "documento", label: "CPF/CNPJ", type: "text", placeholder: "000.000.000-00" },
+      { name: "whatsapp", label: "WhatsApp", type: "text", placeholder: "(00) 00000-0000" },
       { name: "endereco", label: "Endereco", type: "textarea" },
-      { name: "matriz", label: "Matriz", type: "select", options: matrizOptions },
+      { name: "matriz", label: "Tipo da unidade", type: "select", options: matrizOptions },
     ];
     if (isSuperAdmin) {
       baseFields.splice(4, 0, { name: "plano", label: "Plano", type: "select", required: true, options: planoOptions });
@@ -549,7 +592,7 @@ function buildFields(
     return [
       { name: "barbearia", label: "Barbearia", type: "select", required: true, options: barbeariaOptions },
       { name: "nome", label: "Nome completo", type: "text", required: true },
-      { name: "whatsapp", label: "WhatsApp", type: "text", required: true },
+      { name: "whatsapp", label: "WhatsApp", type: "text", required: true, placeholder: "(00) 00000-0000" },
       { name: "email", label: "Email", type: "email" },
       { name: "endereco", label: "Endereco", type: "textarea" },
       { name: "username", label: "Usuario do cliente", type: "text" },
@@ -651,6 +694,7 @@ function buildFields(
 
 function FieldInput({ field }: { field: Field }) {
   const className = "w-full rounded-md border border-zinc-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-[#8b1e24] focus:ring-2 focus:ring-[#8b1e24]/10";
+  const masked = field.name === "whatsapp" || field.name === "documento";
 
   return (
     <label className="block">
@@ -666,10 +710,44 @@ function FieldInput({ field }: { field: Field }) {
       ) : field.type === "textarea" ? (
         <textarea className={className} name={field.name} placeholder={field.placeholder} required={field.required} rows={3} />
       ) : (
-        <input className={className} name={field.name} placeholder={field.placeholder} required={field.required} step="0.01" type={field.type} />
+        <input
+          className={className}
+          inputMode={masked ? "numeric" : undefined}
+          name={field.name}
+          onChange={(event) => {
+            event.currentTarget.value = applyMask(field.name, event.currentTarget.value);
+          }}
+          placeholder={field.placeholder}
+          required={field.required}
+          step="0.01"
+          type={field.type}
+        />
       )}
     </label>
   );
+}
+
+function applyMask(name: string, value: string) {
+  if (name === "whatsapp") return formatWhatsapp(value);
+  if (name === "documento") return formatDocument(value);
+  return value;
+}
+
+function formatWhatsapp(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return digits ? `(${digits}` : "";
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function formatDocument(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  if (digits.length <= 11) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+  if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
 }
 
 function BarbeariasTable({
