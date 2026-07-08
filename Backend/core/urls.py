@@ -1,10 +1,13 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
     AgendamentoViewSet,
     BarbeariaViewSet,
+    BarbeariaSignupView,
     CadeiraViewSet,
     ClienteViewSet,
+    MeView,
     PlanoViewSet,
     RegistroPagamentoViewSet,
     ServicoViewSet,
@@ -21,5 +24,8 @@ router.register("cadeiras", CadeiraViewSet, basename="cadeiras")
 router.register("agendamentos", AgendamentoViewSet, basename="agendamentos")
 router.register("pagamentos", RegistroPagamentoViewSet, basename="pagamentos")
 
-urlpatterns = router.urls
-
+urlpatterns = [
+    *router.urls,
+    path("me/", MeView.as_view(), name="me"),
+    path("cadastro-barbearia/", BarbeariaSignupView.as_view(), name="cadastro-barbearia"),
+]

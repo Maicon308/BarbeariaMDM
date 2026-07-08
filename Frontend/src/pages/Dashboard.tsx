@@ -1,4 +1,4 @@
-import { CalendarClock, CircleDollarSign, Plus, Scissors, Users } from "lucide-react";
+import { Armchair, Building2, CalendarClock, CircleDollarSign, CreditCard, Scissors, UserRoundPlus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -48,27 +48,24 @@ export default function Dashboard() {
   const faturamento = Number(dashboard?.faturamento_hoje ?? 0);
 
   return (
-    <main className="min-h-screen bg-[#f6f5f2]">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+    <main className="mx-auto max-w-7xl space-y-5">
+      <section className="rounded-lg bg-[#191512] p-5 text-white shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold text-zinc-950">BarbeariaMDM</h1>
-            <p className="text-sm text-zinc-500">Operacao, agenda e caixa por tenant</p>
+            <p className="text-sm font-semibold text-[#c8a45d]">Operacao do dia</p>
+            <h1 className="mt-1 text-3xl font-black">Painel executivo da barbearia</h1>
+            <p className="mt-2 max-w-2xl text-sm text-white/70">
+              Acompanhe agenda, faturamento, clientes e operacao por tenant. Use o menu para acessar cada cadastro.
+            </p>
           </div>
-          <div className="flex gap-2">
-            <button className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50">
-              <CalendarClock size={16} />
-              Agenda
-            </button>
-            <button className="inline-flex items-center gap-2 rounded-md bg-zinc-950 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-              <Plus size={16} />
-              Novo horario
-            </button>
+          <div className="rounded-md border border-white/15 bg-white/10 px-4 py-3 text-right">
+            <p className="text-xs text-white/60">Hoje</p>
+            <p className="text-xl font-bold">{new Date().toLocaleDateString("pt-BR")}</p>
           </div>
         </div>
-      </header>
+      </section>
 
-      <section className="mx-auto grid max-w-7xl gap-5 px-5 py-6 lg:grid-cols-[1fr_340px]">
+      <section className="grid gap-5 lg:grid-cols-[1fr_340px]">
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-4">
             <Metric
@@ -93,10 +90,29 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              ["Clientes", "Cadastrar cliente e senha", <UserRoundPlus size={18} />],
+              ["Filiais", "Criar filial VIP isolada", <Building2 size={18} />],
+              ["Servicos", "Preco e duracao", <Scissors size={18} />],
+              ["Cadeiras", "Aluguel e comissao", <Armchair size={18} />],
+              ["Pagamentos", "Dinheiro, cartao e PIX", <CreditCard size={18} />],
+              ["Agenda", "Reserva e historico", <CalendarClock size={18} />],
+            ].map(([title, subtitle, icon]) => (
+              <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm" key={String(title)}>
+                <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#fff4f1] text-[#8b1e24]">
+                  {icon}
+                </div>
+                <p className="font-semibold text-[#191512]">{title}</p>
+                <p className="text-sm text-zinc-500">{subtitle}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold text-zinc-950">Agendamentos do dia</h2>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+              <span className="rounded-full bg-[#f0dfbc] px-3 py-1 text-xs font-medium text-[#5a3e18]">
                 Isolado por barbearia
               </span>
             </div>
@@ -153,8 +169,8 @@ function Metric({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-md bg-zinc-100 text-zinc-700">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#fff4f1] text-[#8b1e24]">
         {icon}
       </div>
       <p className="text-sm text-zinc-500">{label}</p>

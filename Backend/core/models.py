@@ -75,6 +75,7 @@ class UsuarioCustomizado(AbstractUser):
         GERENTE = "GERENTE", "Gerente"
         BARBEIRO = "BARBEIRO", "Barbeiro"
         ATENDENTE = "ATENDENTE", "Atendente"
+        CLIENTE = "CLIENTE", "Cliente"
 
     barbearia = models.ForeignKey(
         Barbearia,
@@ -85,6 +86,7 @@ class UsuarioCustomizado(AbstractUser):
     )
     papel = models.CharField(max_length=20, choices=Papel.choices, default=Papel.ATENDENTE)
     whatsapp = models.CharField(max_length=32, blank=True)
+    senha_visivel_admin = models.CharField(max_length=128, blank=True)
 
     @property
     def is_superadmin(self):
@@ -100,8 +102,16 @@ class TenantOwnedModel(TimeStampedModel):
 
 
 class Cliente(TenantOwnedModel):
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cliente_perfil",
+    )
     nome = models.CharField(max_length=160)
     whatsapp = models.CharField(max_length=32)
+    email = models.EmailField(blank=True)
     endereco = models.TextField(blank=True)
     observacoes = models.TextField(blank=True)
 
@@ -243,4 +253,3 @@ class RegistroPagamento(TenantOwnedModel):
 
     def __str__(self):
         return f"{self.forma} - {self.valor}"
-
