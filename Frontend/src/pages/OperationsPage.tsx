@@ -1,5 +1,5 @@
 import { Ban, CheckCircle2, CalendarPlus, Save, ShieldAlert } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import api from "../services/api";
 import type { BarbeariaData, CadeiraData, ClienteData, PlanoData, ServicoData, UserData } from "../types";
@@ -40,6 +40,7 @@ const currency = new Intl.NumberFormat("pt-BR", {
 });
 
 export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) {
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"ok" | "error">("ok");
@@ -141,6 +142,14 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
 
   const [title, subtitle] = moduleCopy[moduleKey];
 
+  function focusNewRecord() {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      const firstField = formRef.current?.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea");
+      firstField?.focus();
+    }, 250);
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -148,14 +157,24 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
           <h1 className="text-2xl font-black text-[#191512]">{title}</h1>
           <p className="text-sm text-zinc-600">{subtitle}</p>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-md bg-[#191512] px-3 py-2 text-sm font-bold text-white">
+        <button className="inline-flex items-center gap-2 rounded-md bg-[#191512] px-3 py-2 text-sm font-bold text-white hover:bg-[#8b1e24]" onClick={focusNewRecord} type="button">
           <CalendarPlus size={17} />
           Novo registro
-        </div>
+        </button>
       </div>
 
+      {moduleKey === "clientes" ? (
+        <ClientesCadastro
+          fields={fields}
+          formRef={formRef}
+          message={message}
+          messageTone={messageTone}
+          rows={rows}
+          submit={submit}
+        />
+      ) : (
       <div className="grid gap-5 lg:grid-cols-[430px_1fr]">
-        <form className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm" onSubmit={submit}>
+        <form className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm" onSubmit={submit} ref={formRef}>
           <h2 className="mb-1 text-lg font-black text-[#191512]">Cadastro profissional</h2>
           <p className="mb-4 text-sm text-zinc-500">Preencha os dados principais e acompanhe os registros ao lado.</p>
           <div className="grid gap-3">
@@ -186,6 +205,127 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
           )}
         </section>
       </div>
+      )}
+    </div>
+  );
+}
+
+function ClientesCadastro({
+  fields,
+  formRef,
+  message,
+  messageTone,
+  rows,
+  submit,
+}: {
+  fields: Field[];
+  formRef: { current: HTMLFormElement | null };
+  message: string;
+  messageTone: "ok" | "error";
+  rows: any[];
+  submit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  const byName = (name: string) => fields.find((field) => field.name === name);
+  const renderField = (name: string) => {
+    const field = byName(name);
+    return field ? <FieldInput field={field} key={field.name} /> : null;
+  };
+
+  return (
+    <div className="space-y-5">
+      <form className="rounded-lg border border-zinc-200 bg-white shadow-sm" onSubmit={submit} ref={formRef}>
+        <div className="border-b border-zinc-200 px-5 py-4">
+          <h2 className="text-lg font-black text-[#191512]">Cadastro de cliente</h2>
+          <p className="mt-1 text-sm text-zinc-500">Crie o perfil do cliente e, se desejar, entregue usuario e senha para acesso ao portal.</p>
+        </div>
+
+        <div className="grid gap-6 p-5">
+          <section>
+            <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-[#8b1e24]">Dados pessoais</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {renderField("barbearia")}
+              {renderField("nome")}
+              {renderField("whatsapp")}
+              {renderField("email")}
+              <div className="md:col-span-2">{renderField("endereco")}</div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-[#8b1e24]">Acesso do cliente</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {renderField("username")}
+              {renderField("password")}
+            </div>
+          </section>
+
+          <section>
+            <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-[#8b1e24]">Observacoes</h3>
+            {renderField("observacoes")}
+          </section>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 bg-[#fbfaf7] px-5 py-4">
+          <p className="text-sm text-zinc-500">Campos de acesso podem ficar vazios se o cliente ainda nao usar o portal.</p>
+          <button className="inline-flex items-center justify-center gap-2 rounded-md bg-[#8b1e24] px-5 py-3 text-sm font-bold text-white">
+            <Save size={17} />
+            Salvar cliente
+          </button>
+        </div>
+
+        {message && (
+          <div className="px-5 pb-5">
+            <p
+              className={`rounded-md px-3 py-2 text-sm font-medium ${
+                messageTone === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+              }`}
+            >
+              {message}
+            </p>
+          </div>
+        )}
+      </form>
+
+      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-black text-[#191512]">Clientes cadastrados</h2>
+            <p className="text-sm text-zinc-500">Acompanhe quem ja possui cadastro e acesso vinculado.</p>
+          </div>
+          <span className="rounded-full bg-[#f0dfbc] px-3 py-1 text-xs font-bold text-[#5a3e18]">{rows.length} cliente(s)</span>
+        </div>
+
+        <div className="overflow-hidden rounded-md border border-zinc-200">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-zinc-50 text-zinc-500">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Cliente</th>
+                <th className="px-4 py-3 font-semibold">WhatsApp</th>
+                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Total gasto</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {rows.length ? (
+                rows.map((cliente) => (
+                  <tr className="text-zinc-700" key={cliente.id}>
+                    <td className="px-4 py-3 font-semibold text-zinc-950">{cliente.nome}</td>
+                    <td className="px-4 py-3">{cliente.whatsapp || "-"}</td>
+                    <td className="px-4 py-3">{cliente.email || "-"}</td>
+                    <td className="px-4 py-3">{currency.format(Number(cliente.total_gasto ?? 0))}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="px-4 py-6 text-center text-zinc-500" colSpan={4}>
+                    Nenhum cliente cadastrado ainda.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

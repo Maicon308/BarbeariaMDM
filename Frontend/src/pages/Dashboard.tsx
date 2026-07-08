@@ -89,20 +89,17 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
   return (
     <main className="mx-auto max-w-7xl space-y-5">
       <section className="overflow-hidden rounded-lg bg-[#120d0b] text-white shadow-sm">
-        <div className="relative p-5 sm:p-6">
+        <div className="relative px-4 py-3 sm:px-5">
           <div className="absolute inset-y-0 right-0 w-1/2 bg-[repeating-linear-gradient(135deg,rgba(255,255,255,.10)_0_12px,transparent_12px_24px)] opacity-35" />
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-5">
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full bg-[#f0c76a]/15 px-3 py-1 text-sm font-bold text-[#f0c76a]">
+              <p className="inline-flex items-center gap-2 rounded-full bg-[#f0c76a]/15 px-2.5 py-1 text-xs font-bold text-[#f0c76a]">
                 <Crown size={16} />
                 Painel do SuperAdmin
               </p>
-              <h1 className="mt-3 max-w-3xl text-3xl font-black sm:text-4xl">Gerencie planos, bloqueios, matrizes e filiais.</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/68">
-                Aqui voce controla quem usa o sistema, qual plano cada barbearia tem e se a unidade esta liberada ou bloqueada.
-              </p>
+              <h1 className="mt-2 max-w-3xl text-xl font-black sm:text-2xl">Planos, unidades e acessos da rede.</h1>
             </div>
-            <button className="rounded-md bg-[#8b1e24] px-4 py-3 text-sm font-bold text-white" onClick={() => onNavigate("barbearias")}>
+            <button className="rounded-md bg-[#8b1e24] px-3 py-2 text-sm font-bold text-white" onClick={() => onNavigate("barbearias")}>
               Nova barbearia
             </button>
           </div>
