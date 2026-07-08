@@ -87,6 +87,9 @@ class BarbeariaViewSet(TenantScopedViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
+        if user.is_superadmin:
+            serializer.save()
+            return
         if not user.is_superadmin and not user.barbearia.plano.permite_filiais:
             raise exceptions.ValidationError("Somente plano VIP pode criar filiais.")
         if not user.is_superadmin and serializer.validated_data.get("matriz") != user.barbearia:

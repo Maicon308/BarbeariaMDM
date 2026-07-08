@@ -7,14 +7,20 @@ type ModuleKey = "barbearias" | "clientes" | "agenda" | "servicos" | "cadeiras" 
 
 const configs = {
   barbearias: {
-    title: "Barbearias e filiais",
-    subtitle: "Matriz VIP cria filiais; cada filial opera isolada.",
+    title: "Cadastro de barbearias",
+    subtitle: "Area do SuperAdmin para criar barbearias, definir plano e entregar o acesso inicial ao dono.",
     endpoint: "/barbearias/",
     fields: [
-      ["nome", "Nome da filial", "text"],
+      ["nome", "Nome da barbearia", "text"],
       ["documento", "Documento", "text"],
       ["whatsapp", "WhatsApp", "text"],
       ["endereco", "Endereco", "text"],
+      ["plano", "ID do plano: 1 Basico, 2 Pro, 3 VIP", "number"],
+      ["matriz", "ID da matriz se for filial", "number"],
+      ["nome_admin", "Nome do dono/admin", "text"],
+      ["email_admin", "Email do dono/admin", "email"],
+      ["username_admin", "Usuario do dono/admin", "text"],
+      ["senha_admin", "Senha inicial do dono/admin", "password"],
     ],
   },
   clientes: {
@@ -110,7 +116,7 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
     try {
       await api.post(config.endpoint, payload);
       event.currentTarget.reset();
-      setMessage("Cadastro salvo com isolamento do tenant logado.");
+      setMessage(moduleKey === "barbearias" ? "Barbearia criada. Informe usuario e senha inicial ao dono." : "Cadastro salvo.");
     } catch {
       setMessage("Nao foi possivel salvar. Confira campos obrigatorios e permissoes.");
     }
@@ -148,12 +154,16 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
         </form>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-base font-semibold">Visao do modulo</h2>
+          <h2 className="mb-3 text-base font-semibold">Resumo do modulo</h2>
           <div className="grid gap-3 md:grid-cols-3">
-            {["Tenant automatico", "Dados isolados", "Auditoria por historico"].map((item) => (
+            {[
+              moduleKey === "barbearias" ? "Plano definido pelo admin" : "Cadastro da unidade logada",
+              "Dados separados por unidade",
+              "Historico preservado",
+            ].map((item) => (
               <div className="rounded-md border border-zinc-200 bg-[#fbfaf7] p-4" key={item}>
                 <p className="font-semibold text-[#8b1e24]">{item}</p>
-                <p className="mt-1 text-sm text-zinc-600">Operacao vinculada a barbearia ou filial do usuario autenticado.</p>
+                <p className="mt-1 text-sm text-zinc-600">As informacoes ficam vinculadas ao usuario e a unidade correta.</p>
               </div>
             ))}
           </div>

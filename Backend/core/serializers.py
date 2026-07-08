@@ -21,10 +21,37 @@ class PlanoSerializer(serializers.ModelSerializer):
 class BarbeariaSerializer(serializers.ModelSerializer):
     matriz_nome = serializers.CharField(source="matriz.nome", read_only=True)
     plano_nome = serializers.CharField(source="plano.nome", read_only=True)
+    nome_admin = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    email_admin = serializers.EmailField(write_only=True, required=False, allow_blank=True)
+    username_admin = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    senha_admin = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=8)
 
     class Meta:
         model = Barbearia
         fields = "__all__"
+
+    def create(self, validated_data):
+        nome_admin = validated_data.pop("nome_admin", "")
+        email_admin = validated_data.pop("email_admin", "")
+        username_admin = validated_data.pop("username_admin", "")
+        senha_admin = validated_data.pop("senha_admin", "")
+        barbearia = Barbearia.objects.create(**validated_data)
+
+        if username_admin and senha_admin:
+            user = UsuarioCustomizado(
+                username=username_admin,
+                email=email_admin,
+                first_name=nome_admin or "Administrador",
+                papel=UsuarioCustomizado.Papel.DONO,
+                whatsapp=barbearia.whatsapp,
+                barbearia=barbearia,
+                senha_visivel_admin=senha_admin,
+                is_staff=True,
+            )
+            user.set_password(senha_admin)
+            user.save()
+
+        return barbearia
 
 
 class UsuarioSerializer(serializers.ModelSerializer):

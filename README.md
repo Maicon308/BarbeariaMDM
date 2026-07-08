@@ -16,6 +16,13 @@ SaaS multi-tenant para barbearias com Backend Django/DRF/PostgreSQL e Frontend R
 Backend: http://localhost:8000  
 Frontend: http://localhost:5173
 
+Login SuperAdmin local criado automaticamente pelo Docker:
+
+- Usuario: `admin`
+- Senha: `admin12345`
+
+O SuperAdmin cadastra as barbearias no menu `Barbearias`. A tela inicial e apenas login.
+
 ## Produção com Coolify
 
 1. Crie o projeto no Coolify apontando para o repositório `BarbeariaMDM`.
@@ -36,4 +43,3 @@ Frontend: http://localhost:5173
 
 - `dev`: ambiente local, com `run-dev.bat`.
 - `main`: produção, pronto para Coolify.
-

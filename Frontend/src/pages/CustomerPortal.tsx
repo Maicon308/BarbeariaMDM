@@ -61,7 +61,7 @@ export default function CustomerPortal() {
     <div className="mx-auto max-w-6xl space-y-5">
       <div>
         <h1 className="text-2xl font-black text-[#191512]">Area do cliente</h1>
-        <p className="text-sm text-zinc-600">Cliente entra com a propria senha, ve horarios livres, escolhe corte e sabe o valor antes de reservar.</p>
+        <p className="text-sm text-zinc-600">Veja horarios disponiveis, escolha o servico e reserve seu atendimento.</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
