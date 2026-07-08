@@ -63,9 +63,26 @@ export default function App() {
     return <LoginPage onLogin={loadMe} />;
   }
 
+  if (me.barbearia && !me.barbearia.ativa && !me.is_superadmin) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#100b09] px-5 text-white">
+        <section className="max-w-md rounded-lg border border-white/10 bg-white/10 p-6 shadow-2xl">
+          <p className="text-sm font-semibold text-[#f0c76a]">Barbearia</p>
+          <h1 className="mt-2 text-3xl font-black">Acesso temporariamente indisponivel</h1>
+          <p className="mt-3 text-sm leading-6 text-white/70">
+            Entre em contato com a administracao da plataforma para reativar o acesso.
+          </p>
+          <button className="mt-5 rounded-md bg-[#8b1e24] px-4 py-3 text-sm font-bold text-white" onClick={logout}>
+            Voltar ao login
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <AppShell active={active} me={me} onLogout={logout} onNavigate={setActive}>
-      {active === "dashboard" && <Dashboard />}
+      {active === "dashboard" && <Dashboard me={me} onNavigate={setActive} />}
       {active === "barbearias" && <OperationsPage moduleKey="barbearias" />}
       {active === "clientes" && <OperationsPage moduleKey="clientes" />}
       {active === "agenda" && <OperationsPage moduleKey="agenda" />}

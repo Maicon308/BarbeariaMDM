@@ -15,11 +15,12 @@ SaaS multi-tenant para barbearias com Backend Django/DRF/PostgreSQL e Frontend R
 
 Backend: http://localhost:8000  
 Frontend: http://localhost:5173
+Frontend na rede/Tailscale: use um dos IPs exibidos pelo Vite em `:5173`; a API sera chamada no mesmo host pela porta `8000`.
 
 Login SuperAdmin local criado automaticamente pelo Docker:
 
 - Usuario: `admin`
-- Senha: `admin12345`
+- Senha: `16122012`
 
 O SuperAdmin cadastra as barbearias no menu `Barbearias`. A tela inicial e apenas login.
 
@@ -37,6 +38,9 @@ O SuperAdmin cadastra as barbearias no menu `Barbearias`. A tela inicial e apena
    - `ALLOWED_HOSTS`
    - `CORS_ALLOWED_ORIGINS`
    - `VITE_API_URL`
+   - `SUPERADMIN_USERNAME`
+   - `SUPERADMIN_EMAIL`
+   - `SUPERADMIN_PASSWORD`
 6. Configure os domínios nos serviços `backend` e `frontend`.
 
 ## Branches

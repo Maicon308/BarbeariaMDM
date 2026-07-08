@@ -6,7 +6,11 @@ class IsTenantMember(BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        return bool(user and user.is_authenticated and (user.is_superadmin or user.barbearia_id))
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superadmin:
+            return True
+        return bool(user.barbearia_id and user.barbearia.ativa)
 
     def has_object_permission(self, request, view, obj):
         user = request.user
@@ -16,4 +20,3 @@ class IsTenantMember(BasePermission):
         if tenant_id is None and hasattr(obj, "id"):
             tenant_id = obj.id
         return tenant_id in view.get_allowed_tenant_ids()
-

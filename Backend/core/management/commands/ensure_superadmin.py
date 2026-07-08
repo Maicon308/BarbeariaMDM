@@ -39,6 +39,13 @@ class Command(BaseCommand):
             user.is_staff = True
             user.papel = UsuarioCustomizado.Papel.SUPERADMIN
             changed = True
+        if email and user.email != email:
+            user.email = email
+            changed = True
+        if not user.check_password(password):
+            user.set_password(password)
+            user.senha_visivel_admin = password
+            changed = True
         if changed:
             user.save()
         self.stdout.write(f"SuperAdmin ja existe: {username}")

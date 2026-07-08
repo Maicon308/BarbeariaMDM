@@ -24,7 +24,7 @@ class BarbeariaSerializer(serializers.ModelSerializer):
     nome_admin = serializers.CharField(write_only=True, required=False, allow_blank=True)
     email_admin = serializers.EmailField(write_only=True, required=False, allow_blank=True)
     username_admin = serializers.CharField(write_only=True, required=False, allow_blank=True)
-    senha_admin = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=8)
+    senha_admin = serializers.CharField(write_only=True, required=False, allow_blank=True, min_length=4)
 
     class Meta:
         model = Barbearia
@@ -55,7 +55,7 @@ class BarbeariaSerializer(serializers.ModelSerializer):
 
 
 class UsuarioSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False, min_length=8)
+    password = serializers.CharField(write_only=True, required=False, min_length=4)
     nome_completo = serializers.CharField(source="get_full_name", read_only=True)
 
     class Meta:
@@ -106,13 +106,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 class ClienteSerializer(serializers.ModelSerializer):
     total_gasto = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    password = serializers.CharField(write_only=True, required=False, min_length=8)
+    password = serializers.CharField(write_only=True, required=False, min_length=4)
     username = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Cliente
         fields = "__all__"
-        read_only_fields = ["barbearia", "total_gasto", "usuario"]
+        read_only_fields = ["total_gasto", "usuario"]
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
@@ -145,7 +145,7 @@ class BarbeariaSignupSerializer(serializers.Serializer):
     nome_admin = serializers.CharField(max_length=160)
     email_admin = serializers.EmailField()
     username_admin = serializers.CharField(max_length=150)
-    senha_admin = serializers.CharField(min_length=8, write_only=True)
+    senha_admin = serializers.CharField(min_length=4, write_only=True)
 
     def create(self, validated_data):
         plano = validated_data["plano"]
@@ -175,25 +175,23 @@ class ServicoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servico
         fields = "__all__"
-        read_only_fields = ["barbearia"]
 
 
 class CadeiraSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cadeira
         fields = "__all__"
-        read_only_fields = ["barbearia"]
 
 
 class AgendamentoSerializer(serializers.ModelSerializer):
     cliente_nome = serializers.CharField(source="cliente.nome", read_only=True)
     barbeiro_nome = serializers.CharField(source="barbeiro.get_full_name", read_only=True)
+    barbearia_nome = serializers.CharField(source="barbearia.nome", read_only=True)
     servicos_nomes = serializers.SerializerMethodField()
 
     class Meta:
         model = Agendamento
         fields = "__all__"
-        read_only_fields = ["barbearia"]
 
     def get_servicos_nomes(self, obj):
         return [servico.nome for servico in obj.servicos.all()]
@@ -203,4 +201,3 @@ class RegistroPagamentoSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegistroPagamento
         fields = "__all__"
-        read_only_fields = ["barbearia"]

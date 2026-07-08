@@ -32,6 +32,42 @@ export type BarbeariaData = {
   ativa: boolean;
 };
 
+export type PlanoData = {
+  id: number;
+  nome: string;
+  tipo: "BASICO" | "PRO" | "VIP";
+  preco_mensal: string | number;
+  limite_barbeiros: number | null;
+  limite_clientes: number | null;
+  permite_filiais: boolean;
+  ativo: boolean;
+};
+
+export type ClienteData = {
+  id: number;
+  nome: string;
+  whatsapp: string;
+  email: string;
+  barbearia: number;
+  total_gasto?: string | number;
+};
+
+export type ServicoData = {
+  id: number;
+  nome: string;
+  valor: string | number;
+  duracao_minutos: number;
+  barbearia: number;
+  ativo: boolean;
+};
+
+export type CadeiraData = {
+  id: number;
+  identificador: string;
+  barbearia: number;
+  ativa: boolean;
+};
+
 export type MeData = {
   usuario: UserData;
   barbearia: BarbeariaData | null;
