@@ -50,6 +50,11 @@ export default function Dashboard({ me, onNavigate }: { me: MeData; onNavigate: 
 function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
   const [barbearias, setBarbearias] = useState<BarbeariaData[]>([]);
   const [planos, setPlanos] = useState<PlanoData[]>([]);
+  const [clientes, setClientes] = useState<any[]>([]);
+  const [servicos, setServicos] = useState<any[]>([]);
+  const [reservas, setReservas] = useState<any[]>([]);
+  const [pagamentos, setPagamentos] = useState<any[]>([]);
+  const [selectedBarbeariaId, setSelectedBarbeariaId] = useState<number | null>(null);
   const [clientesTotal, setClientesTotal] = useState(0);
   const [servicosTotal, setServicosTotal] = useState(0);
   const [reservasTotal, setReservasTotal] = useState(0);
@@ -61,13 +66,21 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
       api.get<any[]>("/clientes/").catch(() => ({ data: [] as any[] })),
       api.get<any[]>("/servicos/").catch(() => ({ data: [] as any[] })),
       api.get<any[]>("/agendamentos/").catch(() => ({ data: [] as any[] })),
+      api.get<any[]>("/pagamentos/").catch(() => ({ data: [] as any[] })),
     ]).then(
-      ([barbeariasResponse, planosResponse, clientesResponse, servicosResponse, reservasResponse]) => {
+      ([barbeariasResponse, planosResponse, clientesResponse, servicosResponse, reservasResponse, pagamentosResponse]) => {
         setBarbearias(barbeariasResponse.data);
         setPlanos(planosResponse.data);
+        setClientes(clientesResponse.data);
+        setServicos(servicosResponse.data);
+        setReservas(reservasResponse.data);
+        setPagamentos(pagamentosResponse.data);
         setClientesTotal(clientesResponse.data.length);
         setServicosTotal(servicosResponse.data.length);
         setReservasTotal(reservasResponse.data.length);
+        if (!selectedBarbeariaId && barbeariasResponse.data[0]) {
+          setSelectedBarbeariaId(barbeariasResponse.data[0].id);
+        }
       },
     );
   }, []);
@@ -75,6 +88,7 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
   const bloqueadas = barbearias.filter((barbearia) => !barbearia.ativa);
   const matrizes = barbearias.filter((barbearia) => !barbearia.matriz);
   const filiais = barbearias.filter((barbearia) => barbearia.matriz);
+  const selectedBarbearia = barbearias.find((barbearia) => barbearia.id === selectedBarbeariaId) ?? barbearias[0] ?? null;
   const receitaPrevista = useMemo(
     () =>
       barbearias
@@ -139,6 +153,7 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
                   <th className="px-4 py-3 font-semibold">Plano</th>
                   <th className="px-4 py-3 font-semibold">Tipo</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Relatorio</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -149,6 +164,15 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
                     <td className="px-4 py-3 text-zinc-600">{barbearia.matriz ? `Filial de ${barbearia.matriz_nome}` : "Matriz"}</td>
                     <td className="px-4 py-3">
                       <StatusBadge active={barbearia.ativa} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        className="rounded-md border border-zinc-300 px-3 py-2 text-xs font-bold text-zinc-700 hover:border-[#8b1e24] hover:text-[#8b1e24]"
+                        onClick={() => setSelectedBarbeariaId(barbearia.id)}
+                        type="button"
+                      >
+                        Abrir painel
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -190,7 +214,135 @@ function SuperAdminDashboard({ onNavigate }: { onNavigate: (key: NavKey) => void
           </div>
         </aside>
       </section>
+
+      <BarbeariaReport
+        barbearia={selectedBarbearia}
+        clientes={clientes}
+        pagamentos={pagamentos}
+        reservas={reservas}
+        servicos={servicos}
+      />
     </main>
+  );
+}
+
+function BarbeariaReport({
+  barbearia,
+  clientes,
+  pagamentos,
+  reservas,
+  servicos,
+}: {
+  barbearia: BarbeariaData | null;
+  clientes: any[];
+  pagamentos: any[];
+  reservas: any[];
+  servicos: any[];
+}) {
+  if (!barbearia) {
+    return (
+      <section className="rounded-lg border border-dashed border-zinc-300 bg-white p-6 text-sm text-zinc-500">
+        Cadastre uma barbearia para abrir o relatorio operacional.
+      </section>
+    );
+  }
+
+  const sameTenant = (item: any) => Number(item.barbearia) === barbearia.id;
+  const clientesDaBarbearia = clientes.filter(sameTenant);
+  const servicosDaBarbearia = servicos.filter(sameTenant);
+  const reservasDaBarbearia = reservas.filter(sameTenant);
+  const pagamentosDaBarbearia = pagamentos.filter(sameTenant);
+  const faturamento = pagamentosDaBarbearia
+    .filter((pagamento) => pagamento.status === "APROVADO")
+    .reduce((total, pagamento) => total + Number(pagamento.valor ?? 0), 0);
+  const reservasAbertas = reservasDaBarbearia.filter((reserva) => reserva.status === "AGENDADO").length;
+  const ultimasReservas = [...reservasDaBarbearia]
+    .sort((a, b) => new Date(b.inicio ?? 0).getTime() - new Date(a.inicio ?? 0).getTime())
+    .slice(0, 6);
+  const ultimosPagamentos = [...pagamentosDaBarbearia].slice(-5).reverse();
+
+  return (
+    <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
+      <div className="border-b border-zinc-200 px-5 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-[#8b1e24]">Relatorio individual</p>
+            <h2 className="mt-1 text-xl font-black text-[#191512]">{barbearia.nome}</h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              {barbearia.plano_nome} {barbearia.matriz_nome ? `- filial de ${barbearia.matriz_nome}` : "- matriz"}
+            </p>
+          </div>
+          <StatusBadge active={barbearia.ativa} />
+        </div>
+      </div>
+
+      <div className="grid gap-4 p-5 md:grid-cols-5">
+        <Metric icon={<Users size={19} />} label="Clientes" value={String(clientesDaBarbearia.length)} />
+        <Metric icon={<Scissors size={19} />} label="Servicos" value={String(servicosDaBarbearia.length)} />
+        <Metric icon={<CalendarClock size={19} />} label="Reservas" value={String(reservasDaBarbearia.length)} />
+        <Metric icon={<ShieldCheck size={19} />} label="Em aberto" value={String(reservasAbertas)} />
+        <Metric icon={<CircleDollarSign size={19} />} label="Faturamento" value={currency.format(faturamento)} />
+      </div>
+
+      <div className="grid gap-5 border-t border-zinc-200 p-5 lg:grid-cols-[1.2fr_.8fr]">
+        <div>
+          <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-zinc-500">Ultimas reservas</h3>
+          <div className="overflow-hidden rounded-md border border-zinc-200">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-zinc-50 text-zinc-500">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Cliente</th>
+                  <th className="px-4 py-3 font-semibold">Data</th>
+                  <th className="px-4 py-3 font-semibold">Servico</th>
+                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">Valor</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100">
+                {ultimasReservas.length ? (
+                  ultimasReservas.map((reserva) => (
+                    <tr className="text-zinc-700" key={reserva.id}>
+                      <td className="px-4 py-3 font-semibold text-zinc-950">{reserva.cliente_nome ?? "Cliente"}</td>
+                      <td className="px-4 py-3">
+                        {reserva.inicio ? new Date(reserva.inicio).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "-"}
+                      </td>
+                      <td className="px-4 py-3">{(reserva.servicos_nomes ?? []).join(", ") || "-"}</td>
+                      <td className="px-4 py-3">{reserva.status}</td>
+                      <td className="px-4 py-3">{currency.format(Number(reserva.valor_total ?? 0))}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-4 py-6 text-center text-zinc-500" colSpan={5}>
+                      Sem reservas registradas.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside>
+          <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-zinc-500">Pagamentos recentes</h3>
+          <div className="space-y-2">
+            {ultimosPagamentos.length ? (
+              ultimosPagamentos.map((pagamento) => (
+                <div className="rounded-md border border-zinc-200 bg-[#fbfaf7] p-3" key={pagamento.id}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-bold text-zinc-950">{pagamento.forma}</p>
+                    <p className="font-black text-[#8b1e24]">{currency.format(Number(pagamento.valor ?? 0))}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-zinc-500">{pagamento.status}</p>
+                </div>
+              ))
+            ) : (
+              <p className="rounded-md border border-dashed border-zinc-300 p-5 text-sm text-zinc-500">Sem pagamentos registrados.</p>
+            )}
+          </div>
+        </aside>
+      </div>
+    </section>
   );
 }
 

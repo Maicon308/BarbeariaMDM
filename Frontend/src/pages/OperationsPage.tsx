@@ -163,7 +163,18 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
         </button>
       </div>
 
-      {moduleKey === "clientes" ? (
+      {moduleKey === "barbearias" ? (
+        <BarbeariasCadastro
+          barbearias={barbearias}
+          fields={fields}
+          formRef={formRef}
+          isSuperAdmin={isSuperAdmin}
+          message={message}
+          messageTone={messageTone}
+          onToggle={toggleBarbearia}
+          submit={submit}
+        />
+      ) : moduleKey === "clientes" ? (
         <ClientesCadastro
           fields={fields}
           formRef={formRef}
@@ -198,14 +209,165 @@ export default function OperationsPage({ moduleKey }: { moduleKey: ModuleKey }) 
         </form>
 
         <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-          {moduleKey === "barbearias" ? (
-            <BarbeariasTable barbearias={barbearias} isSuperAdmin={isSuperAdmin} onToggle={toggleBarbearia} />
-          ) : (
-            <GenericTable rows={rows} moduleKey={moduleKey} />
-          )}
+          <GenericTable rows={rows} moduleKey={moduleKey} />
         </section>
       </div>
       )}
+    </div>
+  );
+}
+
+function BarbeariasCadastro({
+  barbearias,
+  fields,
+  formRef,
+  isSuperAdmin,
+  message,
+  messageTone,
+  onToggle,
+  submit,
+}: {
+  barbearias: BarbeariaData[];
+  fields: Field[];
+  formRef: { current: HTMLFormElement | null };
+  isSuperAdmin: boolean;
+  message: string;
+  messageTone: "ok" | "error";
+  onToggle: (barbearia: BarbeariaData) => void;
+  submit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  const byName = (name: string) => fields.find((field) => field.name === name);
+  const renderField = (name: string) => {
+    const field = byName(name);
+    return field ? <FieldInput field={field} key={field.name} /> : null;
+  };
+
+  return (
+    <div className="space-y-5">
+      <form className="rounded-lg border border-zinc-200 bg-white shadow-sm" onSubmit={submit} ref={formRef}>
+        <div className="border-b border-zinc-200 px-5 py-4">
+          <h2 className="text-lg font-black text-[#191512]">Ficha da empresa</h2>
+          <p className="mt-1 text-sm text-zinc-500">Cadastre a unidade, plano, dados comerciais e acesso inicial do responsavel.</p>
+        </div>
+
+        <div className="grid gap-6 p-5">
+          <section>
+            <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-[#8b1e24]">Dados da unidade</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {renderField("nome")}
+              {renderField("documento")}
+              {renderField("whatsapp")}
+              {renderField("matriz")}
+              <div className="md:col-span-2">{renderField("endereco")}</div>
+            </div>
+          </section>
+
+          {isSuperAdmin && (
+            <section>
+              <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-[#8b1e24]">Plano e situacao</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {renderField("plano")}
+                {renderField("ativa")}
+              </div>
+            </section>
+          )}
+
+          <section>
+            <h3 className="mb-3 text-sm font-black uppercase tracking-wide text-[#8b1e24]">Responsavel da barbearia</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              {renderField("nome_admin")}
+              {renderField("email_admin")}
+              {renderField("username_admin")}
+              {renderField("senha_admin")}
+            </div>
+          </section>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-200 bg-[#fbfaf7] px-5 py-4">
+          <p className="text-sm text-zinc-500">Use este cadastro como ficha principal da empresa/unidade.</p>
+          <button className="inline-flex items-center justify-center gap-2 rounded-md bg-[#8b1e24] px-5 py-3 text-sm font-bold text-white">
+            <Save size={17} />
+            Salvar barbearia
+          </button>
+        </div>
+
+        {message && (
+          <div className="px-5 pb-5">
+            <p
+              className={`rounded-md px-3 py-2 text-sm font-medium ${
+                messageTone === "ok" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+              }`}
+            >
+              {message}
+            </p>
+          </div>
+        )}
+      </form>
+
+      <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-black text-[#191512]">Empresas cadastradas</h2>
+            <p className="text-sm text-zinc-500">Resumo operacional das matrizes e filiais registradas.</p>
+          </div>
+          <span className="rounded-full bg-[#f0dfbc] px-3 py-1 text-xs font-bold text-[#5a3e18]">{barbearias.length} unidade(s)</span>
+        </div>
+
+        <div className="overflow-hidden rounded-md border border-zinc-200">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-zinc-50 text-zinc-500">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Empresa</th>
+                <th className="px-4 py-3 font-semibold">Plano</th>
+                <th className="px-4 py-3 font-semibold">Tipo</th>
+                <th className="px-4 py-3 font-semibold">WhatsApp</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                {isSuperAdmin && <th className="px-4 py-3 font-semibold">Acao</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+              {barbearias.length ? (
+                barbearias.map((barbearia) => (
+                  <tr className="text-zinc-700" key={barbearia.id}>
+                    <td className="px-4 py-3 font-semibold text-zinc-950">{barbearia.nome}</td>
+                    <td className="px-4 py-3">{barbearia.plano_nome}</td>
+                    <td className="px-4 py-3">{barbearia.matriz_nome ? `Filial de ${barbearia.matriz_nome}` : "Matriz"}</td>
+                    <td className="px-4 py-3">{barbearia.whatsapp || "-"}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                          barbearia.ativa ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                        }`}
+                      >
+                        {barbearia.ativa ? "Liberada" : "Bloqueada"}
+                      </span>
+                    </td>
+                    {isSuperAdmin && (
+                      <td className="px-4 py-3">
+                        <button
+                          className={`rounded-md px-3 py-2 text-xs font-bold ${
+                            barbearia.ativa ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
+                          }`}
+                          onClick={() => onToggle(barbearia)}
+                          type="button"
+                        >
+                          {barbearia.ativa ? "Bloquear" : "Liberar"}
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="px-4 py-6 text-center text-zinc-500" colSpan={isSuperAdmin ? 6 : 5}>
+                    Nenhuma barbearia cadastrada ainda.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }
